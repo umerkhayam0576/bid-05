@@ -9,6 +9,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { BidItem } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface UpcomingBidsListProps {
   bids: BidItem[];
@@ -21,13 +22,7 @@ export const UpcomingBidsList: React.FC<UpcomingBidsListProps> = ({
   onSelectBid,
   onOpenSubmissionDeck,
 }) => {
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
+  const { formatCurrency } = useCurrency();
 
   return (
     <div className="bg-[#171f33] border border-[#222a3d] rounded-lg p-4 sm:p-5 flex flex-col justify-between">

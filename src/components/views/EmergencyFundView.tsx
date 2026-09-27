@@ -17,6 +17,7 @@ import {
   Layers
 } from 'lucide-react';
 import { EmergencyFundState, CashTransaction } from '../../types';
+import { useCurrency } from '../../context/CurrencyContext';
 
 interface EmergencyFundViewProps {
   fundState: EmergencyFundState;
@@ -27,6 +28,7 @@ export const EmergencyFundView: React.FC<EmergencyFundViewProps> = ({
   fundState,
   onUpdateFundState,
 }) => {
+  const { formatCurrency } = useCurrency();
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isDrawdownModalOpen, setIsDrawdownModalOpen] = useState(false);
 
@@ -197,10 +199,10 @@ export const EmergencyFundView: React.FC<EmergencyFundViewProps> = ({
             Total Liquid Reserve Balance
           </div>
           <div className="text-2xl font-bold font-mono text-white">
-            ${fundState.currentBalance.toLocaleString()}
+            {formatCurrency(fundState.currentBalance)}
           </div>
           <div className="text-[11px] text-[#4edea3] mt-2">
-            Target: ${fundState.targetAmount.toLocaleString()} ({fundingPercentage.toFixed(1)}% funded)
+            Target: {formatCurrency(fundState.targetAmount)} ({fundingPercentage.toFixed(1)}% funded)
           </div>
         </div>
 
@@ -212,7 +214,7 @@ export const EmergencyFundView: React.FC<EmergencyFundViewProps> = ({
             {currentRunwayMonths} Months
           </div>
           <div className="text-[11px] text-[#86948a] mt-2">
-            At ${fundState.monthlyBurnRate.toLocaleString()} monthly base burn
+            At {formatCurrency(fundState.monthlyBurnRate)} monthly base burn
           </div>
         </div>
 
@@ -224,7 +226,7 @@ export const EmergencyFundView: React.FC<EmergencyFundViewProps> = ({
             4.95% APY
           </div>
           <div className="text-[11px] text-[#4edea3] mt-2">
-            Generating ~${Math.round((fundState.currentBalance * 0.0495) / 12).toLocaleString()} / month passive income
+            Generating ~{formatCurrency(Math.round((fundState.currentBalance * 0.0495) / 12))} / month passive income
           </div>
         </div>
 
@@ -250,12 +252,12 @@ export const EmergencyFundView: React.FC<EmergencyFundViewProps> = ({
               Capital Reserve Target Progression (6-Month Runway Goal)
             </h3>
             <p className="text-[11px] text-[#86948a]">
-              ${(fundState.targetAmount - fundState.currentBalance).toLocaleString()} remaining to reach full $500,000 corporate fortress threshold
+              {formatCurrency(fundState.targetAmount - fundState.currentBalance)} remaining to reach full {formatCurrency(500000)} corporate fortress threshold
             </p>
           </div>
           <div className="text-right font-mono">
             <span className="text-lg font-bold text-[#4edea3]">{fundingPercentage.toFixed(1)}%</span>
-            <span className="text-xs text-[#86948a]"> of $500,000 goal</span>
+            <span className="text-xs text-[#86948a]"> of {formatCurrency(500000)} goal</span>
           </div>
         </div>
 
@@ -401,10 +403,10 @@ export const EmergencyFundView: React.FC<EmergencyFundViewProps> = ({
                       record.type === 'Drawdown' ? 'text-[#ffb4ab]' : 'text-[#4edea3]'
                     }`}
                   >
-                    {record.type === 'Drawdown' ? '-' : '+'}${record.amount.toLocaleString()}
+                    {record.type === 'Drawdown' ? '-' : '+'}{formatCurrency(record.amount)}
                   </td>
                   <td className="py-3 px-4 text-right font-mono text-white">
-                    ${record.balanceAfter.toLocaleString()}
+                    {formatCurrency(record.balanceAfter)}
                   </td>
                 </tr>
               ))}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Search,
   Bell,
@@ -8,8 +8,11 @@ import {
   Clock,
   X,
   Menu,
-  CalendarClock
+  CalendarClock,
+  Globe,
+  Check
 } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext';
 
 export type NotificationRole = 'admin' | 'employee' | 'client' | 'hr' | 'team-lead';
 
@@ -30,6 +33,15 @@ interface TopNavProps {
   onToggleMobileMenu?: () => void;
   onNavigateToReminders?: () => void;
   urgentReminderCount?: number;
+  currentAuthUser?: {
+    id: string;
+    name: string;
+    role: string;
+    title?: string;
+    avatarUrl?: string;
+    email: string;
+  };
+  onOpenLoginModal?: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -39,11 +51,32 @@ export const TopNav: React.FC<TopNavProps> = ({
   onNavigateToReminders,
   urgentReminderCount = 0,
   viewerRole = 'admin',
+  currentAuthUser,
+  onOpenLoginModal,
 }) => {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
+  const currencyMenuRef = useRef<HTMLDivElement>(null);
   const [liveNotifications, setLiveNotifications] = useState<RoleNotification[]>([]);
   const [activeRole, setActiveRole] = useState<NotificationRole>(viewerRole);
+
+  const { currency, setCurrency, currencyConfig, allCurrencies } = useCurrency();
+
+  // Close currency dropdown when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (currencyMenuRef.current && !currencyMenuRef.current.contains(e.target as Node)) {
+        setShowCurrencyMenu(false);
+      }
+    };
+    if (showCurrencyMenu) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [showCurrencyMenu]);
 
   const notificationFeed: RoleNotification[] = [
     ...liveNotifications,
@@ -144,7 +177,127 @@ export const TopNav: React.FC<TopNavProps> = ({
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        {/* Global Currency Switcher */}
+        <div className="relative" ref={currencyMenuRef}>
+          <button
+            id="btn-global-currency-switcher"
+            onClick={() => {
+              setShowCurrencyMenu(!showCurrencyMenu);
+              setShowNotifications(false);
+            }}
+            className={`h-9 px-2 sm:px-2.5 rounded-md border flex items-center gap-1.5 text-xs font-mono transition-all cursor-pointer ${
+              currency !== 'USD'
+                ? 'bg-[#4edea3]/10 border-[#4edea3]/40 text-[#4edea3] hover:bg-[#4edea3]/20 shadow-[0_0_12px_rgba(78,222,163,0.15)]'
+                : 'bg-[#131b2e] hover:bg-[#171f33] border-[#222a3d] hover:border-[#3c4a42] text-[#dae2fd]'
+            }`}
+            title={`Active Global Currency: ${currencyConfig.name} (${currencyConfig.code}) - Click to toggle exchange conversion`}
+            aria-label="Global Currency Switcher"
+            aria-expanded={showCurrencyMenu}
+          >
+            <span className="text-sm leading-none" role="img" aria-label={currencyConfig.name}>
+              {currencyConfig.flag}
+            </span>
+            <span className="font-bold tracking-wide">{currencyConfig.code}</span>
+            <span className="text-[11px] opacity-75 hidden sm:inline font-sans">
+              ({currencyConfig.symbol.trim()})
+            </span>
+            <ChevronDown
+              className={`w-3 h-3 text-[#86948a] transition-transform duration-200 ${
+                showCurrencyMenu ? 'rotate-180 text-[#4edea3]' : ''
+              }`}
+            />
+          </button>
+
+          {showCurrencyMenu && (
+            <div
+              id="menu-currency-dropdown"
+              className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-[#171f33] border border-[#2d3449] rounded-xl shadow-2xl z-[110] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            >
+              <div className="px-3.5 py-3 border-b border-[#222a3d] bg-[#131b2e] flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-[#4edea3]" />
+                    <span>Global Currency &amp; FX Rates</span>
+                  </div>
+                  <p className="text-[10px] text-[#86948a] mt-0.5">
+                    Converts all bids, balances &amp; ledger figures globally
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowCurrencyMenu(false)}
+                  className="text-[#86948a] hover:text-[#dae2fd] p-1 transition-colors cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Currency Options List */}
+              <div className="p-1.5 max-h-80 overflow-y-auto divide-y divide-[#222a3d]/50">
+                {allCurrencies.map((c) => {
+                  const isSelected = c.code === currency;
+                  return (
+                    <button
+                      key={c.code}
+                      onClick={() => {
+                        setCurrency(c.code);
+                        setShowCurrencyMenu(false);
+                      }}
+                      className={`w-full p-2.5 rounded-lg flex items-center justify-between text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#4edea3]/10 border border-[#4edea3]/30 text-white'
+                          : 'hover:bg-[#1f2b48]/60 text-[#bbcabf] hover:text-white border border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-lg shrink-0">{c.flag}</span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs font-bold text-white">
+                              {c.code}
+                            </span>
+                            <span className="text-[11px] font-mono text-[#4edea3]">
+                              {c.symbol.trim()}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#86948a] truncate">
+                            {c.name}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0 pl-2">
+                        <div className="text-[10px] font-mono text-[#86948a] bg-[#0b1326] px-1.5 py-0.5 rounded border border-[#222a3d]">
+                          {c.code === 'USD' ? (
+                            <span className="text-[#4edea3] font-semibold">1.00 (Base)</span>
+                          ) : (
+                            <span>1 USD = {c.rate.toFixed(c.code === 'JPY' ? 1 : 2)} {c.code}</span>
+                          )}
+                        </div>
+                        {isSelected && (
+                          <span className="text-[10px] font-mono text-[#4edea3] flex items-center justify-end gap-1 mt-1 font-semibold">
+                            <Check className="w-3 h-3" />
+                            <span>Active</span>
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Footer info banner */}
+              <div className="px-3 py-2 bg-[#0b1326] border-t border-[#222a3d] flex items-center justify-between text-[10px] font-mono text-[#86948a]">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#4edea3] animate-pulse" />
+                  <span>Real-time conversion active</span>
+                </span>
+                <span className="text-[#dae2fd]">{currencyConfig.code} ({currencyConfig.symbol.trim()})</span>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Notification Bell */}
         <div className="relative">
           <button
@@ -233,34 +386,41 @@ export const TopNav: React.FC<TopNavProps> = ({
           )}
         </div>
 
-        {/* User Profile Pill */}
+        {/* User Profile & Role-Based Auth Gateway Pill */}
         <div
           id="user-profile-pill"
-          className="flex items-center gap-2 pl-2 border-l border-[#222a3d]"
+          onClick={onOpenLoginModal}
+          className="flex items-center gap-2 pl-2 border-l border-[#222a3d] cursor-pointer group hover:bg-[#131b2e] py-1 px-1.5 rounded-lg transition-colors"
+          title="Click to switch between Owner, Employee, Client, and HR portal logins"
         >
           <div className="relative">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-              alt="Marcus Vance"
-              className="w-8 h-8 rounded-full object-cover ring-1 ring-[#4edea3]/40"
-              referrerPolicy="no-referrer"
-            />
-            <span className="absolute bottom-0 right-0 w-2 h-2 bg-[#4edea3] rounded-full ring-2 ring-[#0b1326]" />
+            {currentAuthUser?.avatarUrl ? (
+              <img
+                src={currentAuthUser.avatarUrl}
+                alt={currentAuthUser.name}
+                className="w-8 h-8 rounded-full object-cover ring-1 ring-[#4edea3]/40"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-[#1e293b] border border-[#334155] flex items-center justify-center font-mono font-bold text-xs text-[#4edea3]">
+                {currentAuthUser?.name ? currentAuthUser.name.slice(0, 2).toUpperCase() : 'UK'}
+              </div>
+            )}
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#4edea3] rounded-full ring-2 ring-[#0b1326]" />
           </div>
           <div className="hidden lg:block text-left leading-tight">
-            <div className="text-xs font-semibold text-[#dae2fd]">Marcus Vance</div>
-            <select
-              aria-label="Preview notification role"
-              value={activeRole}
-              onChange={(event) => { setActiveRole(event.target.value as NotificationRole); setShowNotifications(false); }}
-              className="mt-0.5 max-w-32 bg-transparent text-[10px] font-mono tracking-wider text-[#86948a] uppercase outline-none cursor-pointer"
-            >
-              <option value="admin">Admin</option>
-              <option value="employee">Employee</option>
-              <option value="client">Client</option>
-              <option value="hr">HR</option>
-              <option value="team-lead">Team Lead</option>
-            </select>
+            <div className="text-xs font-semibold text-[#dae2fd] group-hover:text-white flex items-center gap-1.5">
+              <span>{currentAuthUser?.name || 'Umer Khayam'}</span>
+              <ChevronDown className="w-3 h-3 text-[#86948a] group-hover:text-[#4edea3] transition-transform" />
+            </div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[10px] font-mono tracking-wider text-[#4edea3] uppercase font-bold px-1.5 py-0.2 rounded bg-[#4edea3]/15">
+                {(currentAuthUser?.role || 'owner').toUpperCase()} PORTAL
+              </span>
+              <span className="text-[9px] font-mono text-[#86948a] group-hover:text-[#38bdf8]">
+                Switch
+              </span>
+            </div>
           </div>
         </div>
       </div>

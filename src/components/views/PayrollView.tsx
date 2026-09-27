@@ -13,6 +13,7 @@ import {
   Download,
   AlertCircle
 } from 'lucide-react';
+import { useCurrency } from '../../context/CurrencyContext';
 
 interface EmployeeRecord {
   id: string;
@@ -103,6 +104,7 @@ const INITIAL_EMPLOYEES: EmployeeRecord[] = [
 ];
 
 export const PayrollView: React.FC = () => {
+  const { formatCurrency } = useCurrency();
   const [employees, setEmployees] = useState<EmployeeRecord[]>(INITIAL_EMPLOYEES);
   const [payrollRan, setPayrollRan] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');

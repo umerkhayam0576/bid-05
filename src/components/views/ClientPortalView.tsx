@@ -49,6 +49,7 @@ interface ClientPortalViewProps {
   onUpdateRfiStatus?: (rfiId: string, newStatus: RfiStatus, note?: string) => void;
   onCreateRfi?: (newRfi: RfiItem) => void;
   onExitPortal?: () => void;
+  currentClientId?: string;
 }
 
 // Client Portal Deliverable Package Definition
@@ -75,12 +76,19 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
   onUpdateRfiStatus,
   onCreateRfi,
   onExitPortal,
+  currentClientId,
 }) => {
   // Available client profiles for external switching/preview
   const availableClients = clients.length > 0 ? clients : INITIAL_CLIENTS;
 
   // Selected Client Session State
-  const [selectedClientId, setSelectedClientId] = useState<string>(availableClients[0]?.id || 'client-1');
+  const [selectedClientId, setSelectedClientId] = useState<string>(() => {
+    if (currentClientId) {
+      const match = availableClients.find((c) => c.id === currentClientId);
+      if (match) return match.id;
+    }
+    return availableClients[0]?.id || 'client-1';
+  });
   const activeClient = availableClients.find((c) => c.id === selectedClientId) || availableClients[0];
 
   // Active Navigation Sub-tab

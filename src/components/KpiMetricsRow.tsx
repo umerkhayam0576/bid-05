@@ -9,6 +9,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { MetricSummary } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface KpiMetricsRowProps {
   metrics: MetricSummary;
@@ -21,13 +22,7 @@ export const KpiMetricsRow: React.FC<KpiMetricsRowProps> = ({
   onFilterRfiOpen,
   onViewPipeline,
 }) => {
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
+  const { formatCurrency } = useCurrency();
 
   return (
     <div

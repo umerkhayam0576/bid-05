@@ -31,6 +31,8 @@ import {
 
 export type NavTabId =
   | 'overview'
+  | 'owner-portal'
+  | 'hr-portal'
   | 'company-reminders'
   | 'workflow-automation'
   | 'client-portal'
@@ -64,6 +66,8 @@ interface SidebarProps {
   onSwitchWorkspace?: (ws: 'personal-finance' | 'pre-con-estimating') => void;
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
+  currentRole?: string;
+  onOpenLoginModal?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -74,6 +78,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSwitchWorkspace,
   isMobileOpen = false,
   onCloseMobile,
+  currentRole = 'owner',
+  onOpenLoginModal,
 }) => {
   const handleNav = (tab: NavTabId) => {
     onSelectTab(tab);
@@ -145,6 +151,94 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Navigation Links Scrollable */}
       <nav className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4">
+        {/* DEDICATED ROLE PORTALS (USER LOGINS) */}
+        <div className="bg-[#131b2e]/60 border border-[#222a3d] rounded-lg p-2">
+          <div className="flex items-center justify-between px-1 pb-1.5 text-[10px] font-mono tracking-wider text-[#4edea3] uppercase font-bold">
+            <span>Role Portals &amp; Views</span>
+            {onOpenLoginModal && (
+              <button
+                onClick={onOpenLoginModal}
+                className="text-[9px] text-[#38bdf8] hover:underline cursor-pointer"
+              >
+                Switch Login
+              </button>
+            )}
+          </div>
+          <div className="space-y-0.5">
+            <button
+              id="nav-owner-portal"
+              onClick={() => handleNav('owner-portal')}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition-colors cursor-pointer ${
+                activeTab === 'owner-portal'
+                  ? 'bg-[#171f33] text-white font-medium border-l-2 border-[#a855f7]'
+                  : 'text-[#bbcabf] hover:bg-[#131b2e] hover:text-[#dae2fd]'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <PieChart className={`w-3.5 h-3.5 ${activeTab === 'owner-portal' ? 'text-[#a855f7]' : 'text-[#86948a]'}`} />
+                <span className="font-semibold">Owner Portal</span>
+              </div>
+              <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-[#a855f7]/20 text-[#d8b4fe] font-bold">
+                OWNER
+              </span>
+            </button>
+
+            <button
+              id="nav-employee-portal-top"
+              onClick={() => handleNav('employee-portal')}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition-colors cursor-pointer ${
+                activeTab === 'employee-portal'
+                  ? 'bg-[#171f33] text-white font-medium border-l-2 border-[#4edea3]'
+                  : 'text-[#bbcabf] hover:bg-[#131b2e] hover:text-[#dae2fd]'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <UserCheck className={`w-3.5 h-3.5 ${activeTab === 'employee-portal' ? 'text-[#4edea3]' : 'text-[#86948a]'}`} />
+                <span>Employee Workspace</span>
+              </div>
+              <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-[#4edea3]/20 text-[#4edea3] font-bold">
+                STAFF
+              </span>
+            </button>
+
+            <button
+              id="nav-client-portal-top"
+              onClick={() => handleNav('client-portal')}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition-colors cursor-pointer ${
+                activeTab === 'client-portal'
+                  ? 'bg-[#171f33] text-white font-medium border-l-2 border-[#38bdf8]'
+                  : 'text-[#bbcabf] hover:bg-[#131b2e] hover:text-[#dae2fd]'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className={`w-3.5 h-3.5 ${activeTab === 'client-portal' ? 'text-[#38bdf8]' : 'text-[#86948a]'}`} />
+                <span>Client Portal (External)</span>
+              </div>
+              <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-[#38bdf8]/20 text-[#38bdf8] font-bold">
+                CLIENT
+              </span>
+            </button>
+
+            <button
+              id="nav-hr-portal"
+              onClick={() => handleNav('hr-portal')}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition-colors cursor-pointer ${
+                activeTab === 'hr-portal'
+                  ? 'bg-[#171f33] text-white font-medium border-l-2 border-[#3b82f6]'
+                  : 'text-[#bbcabf] hover:bg-[#131b2e] hover:text-[#dae2fd]'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Users className={`w-3.5 h-3.5 ${activeTab === 'hr-portal' ? 'text-[#3b82f6]' : 'text-[#86948a]'}`} />
+                <span>HR &amp; People Operations</span>
+              </div>
+              <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-[#3b82f6]/20 text-[#93c5fd] font-bold">
+                HR
+              </span>
+            </button>
+          </div>
+        </div>
+
         {/* WORKSPACE & CASH FLOW */}
         <div>
           <div className="px-2 pb-1.5 text-[10px] font-mono tracking-wider text-[#86948a] uppercase font-semibold">

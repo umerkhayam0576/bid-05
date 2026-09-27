@@ -485,8 +485,8 @@ export const EmployeeHrView: React.FC<EmployeeHrViewProps> = ({
                   <UserCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Onboard New Team Member</h3>
-                  <p className="text-[11px] text-[#86948a]">Add workforce record, salary, and payroll enrollment</p>
+                  <h3 className="text-sm font-bold text-white">Onboard New Team Member &amp; Generate Logins</h3>
+                  <p className="text-[11px] text-[#86948a]">Auto-provisions employee workspace credentials upon enrollment</p>
                 </div>
               </div>
               <button
@@ -498,6 +498,10 @@ export const EmployeeHrView: React.FC<EmployeeHrViewProps> = ({
             </div>
 
             <form onSubmit={handleOnboardSubmit} className="p-5 space-y-4 text-xs">
+              <div className="p-2.5 rounded-lg bg-[#4edea3]/10 border border-[#4edea3]/25 text-[11px] text-[#4edea3] flex items-center gap-2 font-mono">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>Logins will be automatically generated and dispatched to the employee.</span>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-mono text-[#86948a] mb-1">Full Legal Name*</label>

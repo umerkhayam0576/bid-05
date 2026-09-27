@@ -33,6 +33,7 @@ import {
   CashTransaction,
   BankTransactionType,
 } from '../../types';
+import { useCurrency } from '../../context/CurrencyContext';
 
 interface ConnectedBanksViewProps {
   accounts: ConnectedBankAccount[];
@@ -42,6 +43,7 @@ interface ConnectedBanksViewProps {
   onUpdateAccountLimits: (accountId: string, newAutoLimit: number, newDualSignOffLimit: number) => void;
   onUpdateAccount?: (updatedAccount: ConnectedBankAccount) => void;
   onAddAccount?: (newAccount: ConnectedBankAccount) => void;
+  onRemoveAccount?: (accountId: string) => void;
   onCreateTransferRequest: (request: BankTransferRequest) => void;
   onPartnerApprovalAction: (requestId: string, partnerId: string, partnerName: string, action: 'approved' | 'rejected', notes?: string) => void;
   onExecuteApprovedTransfer: (requestId: string) => void;
@@ -56,11 +58,13 @@ export const ConnectedBanksView: React.FC<ConnectedBanksViewProps> = ({
   onUpdateAccountLimits,
   onUpdateAccount,
   onAddAccount,
+  onRemoveAccount,
   onCreateTransferRequest,
   onPartnerApprovalAction,
   onExecuteApprovedTransfer,
   onRefreshBalances,
 }) => {
+  const { formatCurrency } = useCurrency();
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'pending' | 'auto_approved' | 'executed'>('all');
   const [isNewTransferOpen, setIsNewTransferOpen] = useState(false);
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
@@ -252,7 +256,7 @@ export const ConnectedBanksView: React.FC<ConnectedBanksViewProps> = ({
             </div>
           </div>
           <div className="text-2xl font-bold font-mono text-white">
-            ${totalBankBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {formatCurrency(totalBankBalance, { showDecimals: true })}
           </div>
           <div className="text-[11px] text-[#4edea3] mt-2 flex items-center gap-1">
             <span className="font-semibold">3 of 3 Institutions Live</span> • Wise, Payoneer &amp; Mercury
@@ -270,10 +274,10 @@ export const ConnectedBanksView: React.FC<ConnectedBanksViewProps> = ({
             </div>
           </div>
           <div className="text-2xl font-bold font-mono text-[#38bdf8]">
-            ${totalAvailableBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {formatCurrency(totalAvailableBalance, { showDecimals: true })}
           </div>
           <div className="text-[11px] text-[#86948a] mt-2">
-            ${totalPendingHold.toLocaleString()} in transit clearing holds
+            {formatCurrency(totalPendingHold)} in transit clearing holds
           </div>
         </div>
 
@@ -375,12 +379,12 @@ export const ConnectedBanksView: React.FC<ConnectedBanksViewProps> = ({
                       Current Ledger Balance
                     </div>
                     <div className="text-3xl font-extrabold font-mono text-white mt-1">
-                      ${acc.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {formatCurrency(acc.balance, { showDecimals: true })}
                     </div>
                     <div className="flex items-center justify-between text-xs font-mono mt-2 text-[#bbcabf]">
-                      <span>Available: <strong className="text-[#4edea3]">${acc.availableBalance.toLocaleString()}</strong></span>
+                      <span>Available: <strong className="text-[#4edea3]">{formatCurrency(acc.availableBalance)}</strong></span>
                       {acc.pendingHold > 0 && (
-                        <span className="text-[#86948a]">Hold: ${acc.pendingHold.toLocaleString()}</span>
+                        <span className="text-[#86948a]">Hold: {formatCurrency(acc.pendingHold)}</span>
                       )}
                     </div>
                   </div>
@@ -393,7 +397,7 @@ export const ConnectedBanksView: React.FC<ConnectedBanksViewProps> = ({
                         Auto-Approve Limit:
                       </span>
                       <span className="font-mono font-bold text-[#4edea3]">
-                        ≤ ${acc.autoApprovalLimit.toLocaleString()}
+                        ≤ {formatCurrency(acc.autoApprovalLimit)}
                       </span>
                     </div>
 
@@ -403,13 +407,13 @@ export const ConnectedBanksView: React.FC<ConnectedBanksViewProps> = ({
                         Partner Sign-off Trigger:
                       </span>
                       <span className="font-mono font-bold text-[#ffb4ab]">
-                        &gt; ${acc.autoApprovalLimit.toLocaleString()}
+                        &gt; {formatCurrency(acc.autoApprovalLimit)}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] pt-1 border-t border-[#1f293d]">
                       <span className="text-[#86948a]">Dual-Partner Threshold:</span>
-                      <span className="font-mono text-white">&ge; ${acc.dualSignOffThreshold.toLocaleString()}</span>
+                      <span className="font-mono text-white">&ge; {formatCurrency(acc.dualSignOffThreshold)}</span>
                     </div>
                   </div>
 
@@ -562,13 +566,13 @@ export const ConnectedBanksView: React.FC<ConnectedBanksViewProps> = ({
                       {/* Amount & Threshold */}
                       <td className="py-3.5 px-4 font-mono">
                         <div className="text-sm font-bold text-white">
-                          ${req.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          {formatCurrency(req.amount, { showDecimals: true })}
                         </div>
                         <div className="text-[10px] text-[#86948a] mt-0.5">
                           {req.amount <= req.thresholdApplied ? (
-                            <span className="text-[#4edea3]">Within ${req.thresholdApplied.toLocaleString()} limit</span>
+                            <span className="text-[#4edea3]">Within {formatCurrency(req.thresholdApplied)} limit</span>
                           ) : (
-                            <span className="text-[#ffb4ab]">Exceeds ${req.thresholdApplied.toLocaleString()} threshold</span>
+                            <span className="text-[#ffb4ab]">Exceeds {formatCurrency(req.thresholdApplied)} threshold</span>
                           )}
                         </div>
                       </td>

@@ -7,6 +7,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { ClientItem } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface EnterpriseClientsGridProps {
   clients: ClientItem[];
@@ -19,14 +20,7 @@ export const EnterpriseClientsGrid: React.FC<EnterpriseClientsGridProps> = ({
 }) => {
   const [sortBy, setSortBy] = useState<'value' | 'projects' | 'name'>('value');
   const [showSortMenu, setShowSortMenu] = useState(false);
-
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
+  const { formatCurrency } = useCurrency();
 
   const sortedClients = [...clients].sort((a, b) => {
     if (sortBy === 'value') return b.lifetimeValue - a.lifetimeValue;

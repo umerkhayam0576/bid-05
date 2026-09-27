@@ -11,6 +11,7 @@ import {
   User,
 } from 'lucide-react';
 import { BidItem } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface BidDetailModalProps {
   bid: BidItem | null;
@@ -23,15 +24,8 @@ export const BidDetailModal: React.FC<BidDetailModalProps> = ({
   onClose,
   onOpenDeltaModal,
 }) => {
+  const { formatCurrency } = useCurrency();
   if (!bid) return null;
-
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">

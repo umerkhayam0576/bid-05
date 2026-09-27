@@ -10,6 +10,7 @@ import {
   Building2,
   FileCheck
 } from 'lucide-react';
+import { useCurrency } from '../../context/CurrencyContext';
 
 interface Shareholder {
   id: string;
@@ -66,6 +67,7 @@ const SHAREHOLDERS: Shareholder[] = [
 ];
 
 export const CapTableView: React.FC = () => {
+  const { formatCurrency } = useCurrency();
   const totalShares = 10000000;
   const companyValuation = 4800000;
 
@@ -112,10 +114,10 @@ export const CapTableView: React.FC = () => {
             Enterprise Valuation (409A)
           </div>
           <div className="text-2xl font-bold font-mono text-white">
-            ${(companyValuation / 1000000).toFixed(2)}M
+            {formatCurrency(companyValuation, { compact: true })}
           </div>
           <div className="text-[11px] text-[#4edea3] mt-2">
-            Share Price: $0.48 / share
+            Share Price: {formatCurrency(0.48, { showDecimals: true })} / share
           </div>
         </div>
 
@@ -221,7 +223,7 @@ export const CapTableView: React.FC = () => {
                     {sh.percentage.toFixed(1)}%
                   </td>
                   <td className="p-3 text-right font-bold text-white">
-                    ${sh.currentValue.toLocaleString()}
+                    {formatCurrency(sh.currentValue)}
                   </td>
                 </tr>
               ))}

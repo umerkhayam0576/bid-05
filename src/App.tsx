@@ -44,6 +44,23 @@ import { ClientPortalView } from './components/views/ClientPortalView';
 import { CompanyRemindersView } from './components/views/CompanyRemindersView';
 import { EmployeePortalView } from './components/views/EmployeePortalView';
 import { ConnectedBanksView } from './components/views/ConnectedBanksView';
+import { OwnerPortalView } from './components/views/OwnerPortalView';
+import { HrPortalView } from './components/views/HrPortalView';
+import { AuthLoginModal } from './components/auth/AuthLoginModal';
+import { CredentialsNoticeModal } from './components/auth/CredentialsNoticeModal';
+import {
+  getStoredUserAccounts,
+  saveStoredUserAccounts,
+  getActiveSessionUser,
+  setActiveSessionUser,
+  getCredentialNotices,
+  provisionEmployeeLogin,
+  provisionClientLogin,
+} from './utils/authManager';
+import {
+  UserAuthAccount,
+  GeneratedCredentialsNotice,
+} from './types';
 
 // Enterprise ERP Initial System Data
 import {
@@ -98,7 +115,22 @@ export default function App() {
   });
 
   // State
-  const [activeTab, setActiveTab] = useState<NavTabId>('workflow-automation');
+  const [userAuthAccounts, setUserAuthAccounts] = useState<UserAuthAccount[]>(() => getStoredUserAccounts());
+  const [currentAuthUser, setCurrentAuthUser] = useState<UserAuthAccount>(() => getActiveSessionUser());
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [activeCredentialNotice, setActiveCredentialNotice] = useState<GeneratedCredentialsNotice | null>(null);
+  const [isCredentialNoticeOpen, setIsCredentialNoticeOpen] = useState(false);
+
+  // Tab state - initialized according to current user's role
+  const [activeTab, setActiveTab] = useState<NavTabId>(() => {
+    const user = getActiveSessionUser();
+    if (user.role === 'owner') return 'owner-portal';
+    if (user.role === 'employee') return 'employee-portal';
+    if (user.role === 'client') return 'client-portal';
+    if (user.role === 'hr') return 'hr-portal';
+    if (user.role === 'finance') return 'finance';
+    return 'workflow-automation';
+  });
   const [metrics, setMetrics] = useState<MetricSummary>(INITIAL_METRICS);
   const [rfis, setRfis] = useState<RfiItem[]>(INITIAL_RFIS);
   const [bids, setBids] = useState<BidItem[]>(INITIAL_BIDS);
@@ -430,6 +462,16 @@ export default function App() {
       activeClientsCount: prev.activeClientsCount + 1,
       tier1Count: prev.tier1Count + 1,
     }));
+
+    // AUTOMATIC LOGIN GENERATION FOR CLIENT
+    try {
+      const { user, notice } = provisionClientLogin(newClient);
+      setUserAuthAccounts((prev) => [user, ...prev.filter((u) => u.id !== user.id)]);
+      setActiveCredentialNotice(notice);
+      setIsCredentialNoticeOpen(true);
+    } catch (e) {
+      console.error('Failed auto-provisioning client login', e);
+    }
   };
 
   const handleUpdateRfiStatus = (rfiId: string, newStatus: RfiStatus, note?: string) => {
@@ -497,6 +539,16 @@ export default function App() {
 
   const handleAddEmployee = (newEmp: EmployeeItem) => {
     setEmployees((prev) => [newEmp, ...prev]);
+
+    // AUTOMATIC LOGIN GENERATION FOR EMPLOYEE
+    try {
+      const { user, notice } = provisionEmployeeLogin(newEmp);
+      setUserAuthAccounts((prev) => [user, ...prev.filter((u) => u.id !== user.id)]);
+      setActiveCredentialNotice(notice);
+      setIsCredentialNoticeOpen(true);
+    } catch (e) {
+      console.error('Failed auto-provisioning employee login', e);
+    }
   };
 
   const handleRunPayroll = (newRun: PayrollRunItem, outflowTxn: CashTransaction) => {
@@ -557,6 +609,26 @@ export default function App() {
     setTransactions((prev) => [txn, ...prev]);
   };
 
+  // Handle selecting or switching authenticated user
+  const handleSelectAuthUser = (user: UserAuthAccount) => {
+    setCurrentAuthUser(user);
+    setActiveSessionUser(user);
+
+    // Automatically route to their designated role portal
+    if (user.role === 'owner') {
+      setActiveTab('owner-portal');
+    } else if (user.role === 'employee') {
+      setActiveTab('employee-portal');
+    } else if (user.role === 'client') {
+      setActiveTab('client-portal');
+    } else if (user.role === 'hr') {
+      setActiveTab('hr-portal');
+    } else if (user.role === 'finance') {
+      setActiveTab('finance');
+    }
+    setSelectedClient(null);
+  };
+
   // Handle tab change
   const handleSelectTab = (tab: NavTabId) => {
     setSelectedClient(null);
@@ -580,13 +652,13 @@ export default function App() {
     <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] flex flex-col antialiased selection:bg-[#4edea3]/25 selection:text-[#4edea3] theme-surface">
       {/* Top Application Bar */}
       <TopNav
-
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-
         notificationCount={notificationCount}
         onToggleMobileMenu={() => setIsMobileSidebarOpen((prev) => !prev)}
         onNavigateToReminders={() => handleSelectTab('company-reminders')}
         urgentReminderCount={urgentReminderCount}
+        currentAuthUser={currentAuthUser}
+        onOpenLoginModal={() => setIsAuthModalOpen(true)}
       />
 
       {/* Main Body Layout (Sidebar + Content Workspace) */}
@@ -603,6 +675,8 @@ export default function App() {
           }}
           isMobileOpen={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
+          currentRole={currentAuthUser.role}
+          onOpenLoginModal={() => setIsAuthModalOpen(true)}
         />
 
         {/* Scrollable Main Operations Surface */}
@@ -630,8 +704,30 @@ export default function App() {
               onNavigateTab={handleSelectTab}
               onRecordCashOutflow={handleCreateTransaction}
             />
+          ) : activeTab === 'owner-portal' ? (
+            <OwnerPortalView
+              ownerPartner={partners.find((p) => p.id === currentAuthUser.targetId) || partners[0]}
+              partners={partners}
+              partnerPayouts={partnerPayouts}
+              connectedAccounts={connectedAccounts}
+              transferRequests={transferRequests}
+              employees={employees}
+              clients={clients}
+              bids={bids}
+              onNavigateTab={handleSelectTab}
+              onExecutePayout={handleExecutePartnerPayout}
+            />
+          ) : activeTab === 'hr-portal' ? (
+            <HrPortalView
+              employees={employees}
+              payrollRuns={payrollRuns}
+              recentNotices={getCredentialNotices()}
+              onOpenOnboardModal={() => setIsNewRfiOpen(false)}
+              onNavigateTab={handleSelectTab}
+              onSelectEmployee={() => handleSelectTab('hr-directory')}
+            />
           ) : activeTab === 'employee-portal' ? (
-            <EmployeePortalView />
+            <EmployeePortalView currentUser={currentAuthUser} />
           ) : activeTab === 'workflow-automation' ? (
             <WorkflowAutomationHub />
           ) : activeTab === 'client-portal' ? (
@@ -639,6 +735,7 @@ export default function App() {
               rfis={rfis}
               bids={bids}
               clients={clients}
+              currentClientId={currentAuthUser.role === 'client' ? currentAuthUser.targetId : undefined}
               onUpdateRfiStatus={handleUpdateRfiStatus}
               onCreateRfi={handleCreateRfi}
               onExitPortal={() => handleSelectTab('overview')}
@@ -951,6 +1048,28 @@ export default function App() {
         onOpenNewRfi={() => setIsNewRfiOpen(true)}
         onOpenNewBid={() => setIsNewBidOpen(true)}
         onOpenDeltaModal={() => setIsDeltaModalOpen(true)}
+      />
+
+      {/* 11. Role-Based Auth Login & Persona Switcher Modal */}
+      <AuthLoginModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        accounts={userAuthAccounts}
+        currentUser={currentAuthUser}
+        onSelectUser={handleSelectAuthUser}
+      />
+
+      {/* 12. Automated Credential Generation Dispatch Card Modal */}
+      <CredentialsNoticeModal
+        isOpen={isCredentialNoticeOpen}
+        notice={activeCredentialNotice}
+        onClose={() => setIsCredentialNoticeOpen(false)}
+        onSwitchToThisAccount={(userId) => {
+          const target = userAuthAccounts.find((u) => u.id === userId);
+          if (target) {
+            handleSelectAuthUser(target);
+          }
+        }}
       />
     </div>
   );

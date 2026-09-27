@@ -70,15 +70,15 @@ export const NewClientModal: React.FC<NewClientModalProps> = ({
         {/* Header */}
         <div className="px-5 py-4 border-b border-[#222a3d] flex items-center justify-between bg-[#171f33]">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded bg-[#3b82f6]/10 border border-[#3b82f6]/30 flex items-center justify-center text-[#adc6ff]">
+            <div className="w-7 h-7 rounded bg-[#38bdf8]/10 border border-[#38bdf8]/30 flex items-center justify-center text-[#7dd3fc]">
               <Building2 className="w-4 h-4" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-[#dae2fd]">
-                Register Enterprise General Contractor
+                Register Enterprise General Contractor &amp; Client Logins
               </h3>
               <p className="text-[11px] text-[#86948a]">
-                Establish master agreement terms and pre-construction lead contacts
+                Auto-generates dedicated client portal access credentials upon registration
               </p>
             </div>
           </div>
@@ -92,6 +92,10 @@ export const NewClientModal: React.FC<NewClientModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div className="p-2.5 rounded-lg bg-[#38bdf8]/10 border border-[#38bdf8]/25 text-[11px] text-[#7dd3fc] flex items-center gap-2 font-mono">
+            <span className="w-2 h-2 rounded-full bg-[#38bdf8] animate-pulse" />
+            <span>Client will receive auto-generated credentials to access the Client Portal immediately.</span>
+          </div>
           <div>
             <label className="block text-xs font-mono uppercase text-[#86948a] font-semibold mb-1">
               General Contractor / Developer Name *

@@ -21,6 +21,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { ClientItem, RfiItem, BidItem } from '../../types';
+import { useCurrency } from '../../context/CurrencyContext';
 
 interface CompanyDetailViewProps {
   client: ClientItem;
@@ -43,6 +44,7 @@ export const CompanyDetailView: React.FC<CompanyDetailViewProps> = ({
   onSelectRfi,
   onSelectBid,
 }) => {
+  const { formatCurrency } = useCurrency();
   const [activeSection, setActiveSection] = useState<'overview' | 'projects' | 'rfis' | 'invoices' | 'contracts'>('overview');
 
   // Filter RFIs and Bids relevant to this specific client
@@ -55,14 +57,6 @@ export const CompanyDetailView: React.FC<CompanyDetailViewProps> = ({
     r.client.toLowerCase().includes(client.name.toLowerCase()) ||
     client.name.toLowerCase().includes(r.client.toLowerCase())
   );
-
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
